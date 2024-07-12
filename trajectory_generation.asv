@@ -1,0 +1,83 @@
+start_point = [-64, 43, 335];
+via_point = [-40, -94, 335];
+end_point = [-40, -94, 350];
+
+max_v = [3, 7, 3];
+max_a = [1, 1, 1];
+
+
+[times1, velocities1] = trajectory_gen(start_point, via_point, max_v, max_a);
+[times2, velocities2] = trajectory_gen(via_point, end_point, max_v, max_a);
+
+times2 = times2 + times1(1, 5) + 0.01;
+
+times = [times1, times2];
+velocities = [velocities1, velocities2];
+
+time_x = times(1, :);
+time_y = times(2, :);
+time_z = times(3, :);
+
+velo_x = velocities(1, :);
+velo_y = velocities(2, :);
+velo_z = velocities(3, :);
+
+
+function [times, velocities] = moveJ(start_point, end_point, max_v, max_a)
+    
+    [times, velocities] = trajectory_gen(start_point, via_point, max_v, max_a);
+end
+
+function [times, velocities] = moveL(start_point, end_point, max_v, max_a)
+    [times, velocities] = trajectory_gen(start_point, via_point, max_v, max_a);
+end
+
+
+function [times, velocities] = trajectory_gen(start_point, end_point, max_v, max_a)
+    l_max_v = max_v;
+    l_max_a = max_a;
+    start_point(3) = start_point(3) + 70;
+    end_point(3) = end_point(3) + 70;
+
+    h = end_point - start_point
+
+    for i = 1:3
+        if h(i) < 0
+            l_max_v(i) = -l_max_v(i);
+            l_max_a(i) = -l_max_a(i);
+        end 
+    end
+
+    l_max_v
+
+    for i = 1:3
+        if abs(h(i)) >= abs(l_max_v(i)^2 / l_max_a(i))
+            Ta(i) = l_max_v(i) / l_max_a(i);
+            T(i) = (h(i) * l_max_a(i) + l_max_v(i)^2) / (l_max_a(i) * l_max_v(i));
+        else 
+            Ta(i) = sqrt(abs(h(i)) / l_max_a(i));
+            T(i) = 2 * Ta(i);
+        end
+    end
+
+    Ta_max = max(Ta);
+    T_max = max(T);
+
+    l_max_a = h/(Ta_max * (T_max - Ta_max));
+    l_max_v = h/(T_max - Ta_max);
+
+
+    end_time = max(T) + 0.01;
+
+    traj_x_time = [0, Ta_max + 0.00001, T_max - Ta_max + 0.00002, T_max + 0.00003, end_time];
+    traj_x_velo = [0, l_max_v(1), l_max_v(1), 0, 0];
+
+    traj_y_time = [0, Ta_max + 0.00001, T_max - Ta_max + 0.00002, T_max + 0.00003, end_time];
+    traj_y_velo = [0, l_max_v(2), l_max_v(2), 0, 0];
+
+    traj_z_time = [0, Ta_max + 0.00001, T_max - Ta_max + 0.00002, T_max + 0.00003, end_time];
+    traj_z_velo = [0, l_max_v(3), l_max_v(3), 0, 0];
+
+    times = [traj_x_time; traj_y_time; traj_z_time];
+    velocities = [traj_x_velo; traj_y_velo; traj_z_velo];
+end
